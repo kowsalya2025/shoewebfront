@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from "react";
-import axios from "axios"; // ✅ Correct import
+import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 
 const AuthContext = createContext();
@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
     }
   });
 
-  // ✅ Function to check token expiry
+  // ✅ Check token expiry
   const isTokenExpired = (token) => {
     try {
       const decoded = jwtDecode(token);
@@ -25,10 +25,30 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ✅ Login function with error handling
+  // ✅ Refresh token function
+  const refreshAccessToken = async () => {
+    try {
+      const refresh = localStorage.getItem("refresh");
+      if (!refresh) return logout();
+      const res = await axios.post(
+        "https://shoewebback.onrender.com/token/refresh/",
+        { refresh }
+      );
+      localStorage.setItem("access", res.data.access);
+      setUser(jwtDecode(res.data.access)); // update user
+    } catch (error) {
+      console.error("Failed to refresh token:", error);
+      logout();
+    }
+  };
+
+  // ✅ Login function
   const login = async (email, password) => {
     try {
-      const res = await axios.post("https://shoewebback.onrender.com/token/", { email, password });
+      const res = await axios.post(
+        "https://shoewebback.onrender.com/token/",
+        { email, password }
+      );
       localStorage.setItem("access", res.data.access);
       localStorage.setItem("refresh", res.data.refresh);
       setUser(jwtDecode(res.data.access));
@@ -39,27 +59,35 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // ✅ Logout function
   const logout = () => {
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
     setUser(null);
   };
 
-  // ✅ Auto logout if token is expired
+  // ✅ On app load, check token status
   useEffect(() => {
     const token = localStorage.getItem("access");
-    if (token && isTokenExpired(token)) {
-      console.warn("Access token expired — logging out");
-      logout();
+    if (token) {
+      if (isTokenExpired(token)) {
+        console.warn("Access token expired — trying to refresh...");
+        refreshAccessToken();
+      } else {
+        setUser(jwtDecode(token)); // Restore user if token still valid
+      }
     }
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, login, logout, refreshAccessToken }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
 export default AuthContext;
+
 
