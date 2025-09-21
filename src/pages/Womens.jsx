@@ -483,7 +483,7 @@ const CheckoutPage = () => {
         <h1 className="text-4xl font-bold text-gray-800 mb-4">Order Summary</h1>
         <button
           onClick={() => setCurrentView("cart")}
-          className="text-2xl font-semibold text-gray-800 mb-6 hover:text-blue-600 transition-colors"
+          className="text-2xl font-semibold text-white-800 mb-6 hover:text-blue-600 transition-colors"
         >
           ← Back to Cart
         </button>
