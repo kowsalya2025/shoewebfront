@@ -2,7 +2,7 @@ import { useState, useContext } from "react";
 import AuthContext from "../context/AuthContext";
 import Layout from "../components/Layout";
 import { Eye, EyeOff } from "lucide-react"; // for password toggle icon
-import { login } from "./auth";
+
 
 export default function AuthPage() {
   const { login, register } = useContext(AuthContext); // assuming register is implemented
