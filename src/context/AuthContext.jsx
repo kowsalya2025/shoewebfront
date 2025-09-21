@@ -1,3 +1,4 @@
+// src/context/AuthContext.jsx
 import { createContext, useState, useEffect } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
@@ -30,10 +31,12 @@ export const AuthProvider = ({ children }) => {
     try {
       const refresh = localStorage.getItem("refresh");
       if (!refresh) return logout();
+
       const res = await axios.post(
         "https://shoewebback.onrender.com/token/refresh/",
         { refresh }
       );
+
       localStorage.setItem("access", res.data.access);
       setUser(jwtDecode(res.data.access)); // update user
     } catch (error) {
@@ -45,16 +48,33 @@ export const AuthProvider = ({ children }) => {
   // ✅ Login function
   const login = async (email, password) => {
     try {
-      const res = await axios.post(
-        "https://shoewebback.onrender.com/token/",
-        { email, password }
-      );
+      const res = await axios.post("https://shoewebback.onrender.com/token/", {
+        email,
+        password,
+      });
       localStorage.setItem("access", res.data.access);
       localStorage.setItem("refresh", res.data.refresh);
       setUser(jwtDecode(res.data.access));
       return true;
     } catch (error) {
       console.error("Login failed:", error);
+      return false;
+    }
+  };
+
+  // ✅ Register function (optional)
+  const register = async (email, password) => {
+    try {
+      const res = await axios.post(
+        "https://shoewebback.onrender.com/register/",
+        { email, password }
+      );
+      console.log("Registration successful:", res.data);
+      // Optionally auto-login after register
+      await login(email, password);
+      return true;
+    } catch (error) {
+      console.error("Registration failed:", error);
       return false;
     }
   };
@@ -79,9 +99,27 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  // ✅ Auto refresh token every 5 minutes (optional)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const token = localStorage.getItem("access");
+      if (token && isTokenExpired(token)) {
+        refreshAccessToken();
+      }
+    }, 5 * 60 * 1000); // every 5 minutes
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <AuthContext.Provider
-      value={{ user, login, logout, refreshAccessToken }}
+      value={{
+        user,
+        login,
+        register,
+        logout,
+        refreshAccessToken,
+      }}
     >
       {children}
     </AuthContext.Provider>
@@ -89,5 +127,6 @@ export const AuthProvider = ({ children }) => {
 };
 
 export default AuthContext;
+
 
 
