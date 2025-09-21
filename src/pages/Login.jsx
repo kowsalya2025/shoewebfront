@@ -122,7 +122,7 @@ export default function AuthPage() {
               ? "Don’t have an account? "
               : "Already have an account? "}
             <span
-              className="text-red-500 cursor-pointer hover:underline"
+              className="text-red-500 cursor-pointer hover:underline text-center"
               onClick={() => setTab(tab === "login" ? "register" : "login")}
             >
               {tab === "login" ? "Register" : "Log In"}
